@@ -1,1 +1,3 @@
-from minibpe._native import NativeBasicTokenizer as BasicTokenizer
+from minibpe._native import NativeBasicTokenizer
+from minibpe.basic import PyBasicTokenizer
+BasicTokenizer = NativeBasicTokenizer
