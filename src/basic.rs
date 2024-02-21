@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use crate::TrainError;
 
 fn merge(tokens: &[u32], pair: (u32, u32), idx: u32) -> Vec<u32> {
     let mut res = vec![];
@@ -66,14 +67,9 @@ fn create_vocab_from_merges<I: Clone + IntoIterator<Item = ((u32, u32), u32)>>(
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
-struct BasicTokenizer {
+pub struct BasicTokenizer {
     merges: HashMap<(u32, u32), u32>,
     vocab: HashMap<u32, Vec<u8>>,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-enum TrainError {
-    NotEnoughPairs,
 }
 
 impl BasicTokenizer {
@@ -82,8 +78,10 @@ impl BasicTokenizer {
         let vocab = create_vocab_from_merges(&merges.clone());
         Self { merges, vocab }
     }
+}
 
-    fn train(text: &str, vocab_size: u32) -> Result<Self, TrainError> {
+impl BasicTokenizer {
+    pub fn train(text: &str, vocab_size: u32) -> Result<Self, TrainError> {
         assert!(
             vocab_size >= 256,
             "vocabulary must include at least all bytes (>= 256)"
@@ -104,7 +102,7 @@ impl BasicTokenizer {
         Ok(Self::from_merges(&merges))
     }
 
-    fn encode(&self, text: &str) -> Vec<u32> {
+    pub fn encode(&self, text: &str) -> Vec<u32> {
         // Safety: Conversion from char to u32 should always be valid.
         let mut tokens: Vec<_> = text.as_bytes().into_iter().map(|c| *c as u32).collect();
         while let Some(pair) = {
@@ -133,7 +131,7 @@ impl BasicTokenizer {
         tokens
     }
 
-    fn decode(&self, tokens: impl IntoIterator<Item = u32>) -> String {
+    pub fn decode(&self, tokens: impl IntoIterator<Item = u32>) -> String {
         let mut res = Vec::default();
         for token in tokens.into_iter() {
             let bytes = self
