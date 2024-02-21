@@ -1,7 +1,10 @@
-use pyo3::prelude::*;
 use basic::BasicTokenizer;
+use regex::tokenizer_with_presplit;
+use pyo3::prelude::*;
 
 mod basic;
+mod regex;
+mod utils;
 
 #[derive(Clone, Debug, PartialEq)]
 enum TrainError {
@@ -29,9 +32,21 @@ impl NativeBasicTokenizer {
     }
 }
 
+#[pyfunction]
+fn py_tokenizer_with_presplit(
+    text: &str,
+    vocab_size: u32,
+    regex: &str,
+) -> NativeBasicTokenizer {
+    let tok = tokenizer_with_presplit(text, vocab_size, regex);
+    let tok = tok.expect("training failed");
+    NativeBasicTokenizer(tok)
+}
+
 #[pymodule]
 #[pyo3(name = "_native")]
 fn minibpe_exercise(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<NativeBasicTokenizer>()?;
+    m.add_function(wrap_pyfunction!(py_tokenizer_with_presplit, m)?)?;
     Ok(())
 }
