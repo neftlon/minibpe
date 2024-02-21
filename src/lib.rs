@@ -1,8 +1,11 @@
 use basic::BasicTokenizer;
-use regex::tokenizer_with_presplit;
+use gpt4::Gpt4Tokenizer;
 use pyo3::prelude::*;
+use regex::tokenizer_with_presplit;
+use std::collections::HashMap;
 
 mod basic;
+mod gpt4;
 mod regex;
 mod utils;
 
@@ -33,20 +36,38 @@ impl NativeBasicTokenizer {
 }
 
 #[pyfunction]
-fn py_tokenizer_with_presplit(
-    text: &str,
-    vocab_size: u32,
-    regex: &str,
-) -> NativeBasicTokenizer {
+fn py_tokenizer_with_presplit(text: &str, vocab_size: u32, regex: &str) -> NativeBasicTokenizer {
     let tok = tokenizer_with_presplit(text, vocab_size, regex);
     let tok = tok.expect("training failed");
     NativeBasicTokenizer(tok)
+}
+
+
+#[pyclass(frozen)]
+struct NativeGpt4Tokenizer(Gpt4Tokenizer);
+
+#[pymethods]
+impl NativeGpt4Tokenizer {
+    #[staticmethod]
+    fn from_merges_and_shuffles(merges: HashMap<(u32,u32),u32>, byte_shuffle: HashMap<u8,u8>) -> Self {
+        let tok = Gpt4Tokenizer::from_merges_and_shuffles(&merges, &byte_shuffle);
+        NativeGpt4Tokenizer(tok)
+    }
+
+    fn encode(&self, text: &str) -> Vec<u32> {
+        self.0.encode(text)
+    }
+
+    fn decode(&self, tokens: Vec<u32>) -> String {
+        self.0.decode(tokens)
+    }
 }
 
 #[pymodule]
 #[pyo3(name = "_native")]
 fn minibpe_exercise(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<NativeBasicTokenizer>()?;
+    m.add_class::<NativeGpt4Tokenizer>()?;
     m.add_function(wrap_pyfunction!(py_tokenizer_with_presplit, m)?)?;
     Ok(())
 }

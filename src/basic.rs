@@ -69,9 +69,9 @@ impl BasicTokenizer {
         Ok(Self::from_merges(&merges))
     }
 
-    pub fn encode(&self, text: &str) -> Vec<u32> {
+    pub(crate) fn encode_from_bytes(&self, tokens: &[u8]) -> Vec<u32> {
         // Safety: Conversion from char to u32 should always be valid.
-        let mut tokens: Vec<_> = text.as_bytes().into_iter().map(|c| *c as u32).collect();
+        let mut tokens: Vec<_> = tokens.into_iter().map(|c| *c as u32).collect();
         while let Some(pair) = {
             let stats = get_stats(&tokens);
             // get pair with minimum merge index (indicated by lowest generated
@@ -98,7 +98,12 @@ impl BasicTokenizer {
         tokens
     }
 
-    pub fn decode(&self, tokens: impl IntoIterator<Item = u32>) -> String {
+    pub fn encode(&self, text: &str) -> Vec<u32> {
+        let bytes: Vec<_> = text.as_bytes().into_iter().copied().collect();
+        self.encode_from_bytes(&bytes)
+    }
+
+    pub(crate) fn decode_into_bytes(&self, tokens: impl IntoIterator<Item = u32>) -> Vec<u8> {
         let mut res = Vec::default();
         for token in tokens.into_iter() {
             let bytes = self
@@ -107,7 +112,12 @@ impl BasicTokenizer {
                 .expect("vocab should contain a mapping for every token");
             res.extend_from_slice(&bytes);
         }
-        String::from_utf8_lossy(&res).into()
+        res
+    }
+
+    pub fn decode(&self, tokens: impl IntoIterator<Item = u32>) -> String {
+        let bytes = self.decode_into_bytes(tokens);
+        String::from_utf8_lossy(&bytes).into()
     }
 }
 

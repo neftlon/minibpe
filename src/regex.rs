@@ -75,8 +75,8 @@ mod tests {
 
     #[test]
     fn it_works() -> Result<(), TrainError> {
-        let tok = tokenizer_with_presplit("foo bar'nt! fo.", 256 + 5, GPT4_SPLIT_PATTERN)?;
-        assert_eq!(tok.encode("fo").len(), 1);
+        let tok = tokenizer_with_presplit("foo bar'nt! fo. are'nt!", 256 + 5, GPT4_SPLIT_PATTERN)?;
+        assert_eq!(tok.encode("!").len(), 1);
         Ok(())
     }
 
