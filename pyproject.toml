@@ -16,3 +16,7 @@ dynamic = ["version"]
 python-source = "python"
 module-name = "minibpe._native"
 features = ["pyo3/extension-module"]
+
+[tool.ruff]
+indent-width = 2
+target-version = "py312"

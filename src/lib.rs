@@ -42,14 +42,16 @@ fn py_tokenizer_with_presplit(text: &str, vocab_size: u32, regex: &str) -> Nativ
     NativeBasicTokenizer(tok)
 }
 
-
 #[pyclass(frozen)]
 struct NativeGpt4Tokenizer(Gpt4Tokenizer);
 
 #[pymethods]
 impl NativeGpt4Tokenizer {
     #[staticmethod]
-    fn from_merges_and_shuffles(merges: HashMap<(u32,u32),u32>, byte_shuffle: HashMap<u8,u8>) -> Self {
+    fn from_merges_and_shuffles(
+        merges: HashMap<(u32, u32), u32>,
+        byte_shuffle: HashMap<u8, u8>,
+    ) -> Self {
         let tok = Gpt4Tokenizer::from_merges_and_shuffles(&merges, &byte_shuffle);
         NativeGpt4Tokenizer(tok)
     }
